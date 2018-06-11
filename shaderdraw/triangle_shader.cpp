@@ -1,7 +1,7 @@
 #define GLEW_STATIC
 #include "GL/glew.h"
 #include "GLFW/glfw3.h"
-#include "shader.h"
+#include "../common/shader.h"
 
 #define WINDOW_SIZE 500
 
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    Shader shader("triangle_shader.vertex", "triangle_shader.frag");
+    Shader shader("triangle_shader.vert", "triangle_shader.frag");
 
     while (!glfwWindowShouldClose(window)) {
         glfwPollEvents();

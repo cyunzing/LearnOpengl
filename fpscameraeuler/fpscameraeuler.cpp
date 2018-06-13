@@ -1,72 +1,86 @@
 #define GLEW_STATIC
-#include "GL/glew.h"
+#include "gl/glew.h"
 #include "GLFW/glfw3.h"
+
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
 #include "../common/shader.h"
 #include "../common/texture.h"
+#include "camera.h"
 
 #define WINDOW_SIZE 500
-#define MULTI_CUBE 1
-#define MULTI_VIEW 1
 
-glm::mat4 computeLookAtMatrix(const glm::vec3 &eye, const glm::vec3 &center, const glm::vec3 &up)
-{
-	glm::vec3 f = glm::normalize(center - eye);
-	glm::vec3 s = glm::normalize(glm::cross(f, up));
-	glm::vec3 u = glm::normalize(glm::cross(s, f));
-
-	glm::mat4 lookAtMat(
-		glm::vec4(s.x, u.x, -f.x, 0.0),
-		glm::vec4(s.y, u.y, -f.y, 0.0),
-		glm::vec4(s.z, u.z, -f.z, 0.0),
-		glm::vec4(-glm::dot(s, eye), -glm::dot(u, eye), glm::dot(f, eye), 1.0)
-		);
-	return lookAtMat;
-}
-
-glm::mat4 computeLookAtMatrix2(const glm::vec3 &eye, const glm::vec3 &center, const glm::vec3 &up)
-{
-	glm::vec3 f = glm::normalize(center - eye);
-	glm::vec3 s = glm::normalize(glm::cross(f, up));
-	glm::vec3 u = glm::normalize(glm::cross(s, f));
-
-	glm::mat4 rotate(
-		glm::vec4(s.x, u.x, -f.x, 0.0),
-		glm::vec4(s.y, u.y, -f.y, 0.0),
-		glm::vec4(s.z, u.z, -f.z, 0.0),
-		glm::vec4(0.0, 0.0, 0.0, 1.0)
-	);
-	glm::mat4 translate;
-	translate = glm::translate(translate, -eye);
-	return rotate * translate;
-}
-
-// xoz平面内圆形坐标
-glm::vec3 getEyePosCircle()
-{
-	GLfloat radius = 6.0f;
-	GLfloat xPos = radius * cos(glfwGetTime());
-	GLfloat zPos = radius * sin(glfwGetTime());
-	return glm::vec3(xPos, 0.0f, zPos);
-}
-
-glm::vec3 getEyePosSphere()
-{
-	GLfloat radius = 6.0f;
-	GLfloat theta = glfwGetTime(), phi = glfwGetTime() / 2.0f;
-	GLfloat xPos = radius * sin(theta) * cos(phi);
-	GLfloat yPos = radius * sin(theta) * sin(phi);
-	GLfloat zPos = radius * cos(theta);
-	return glm::vec3(xPos, yPos, zPos);
-}
+Camera camera(glm::vec3(0.0f, 0.0f, 6.0f));
+GLboolean keyStatus[1024] = { GL_FALSE };
+GLfloat deltaTime = 0.0f, lastFrame = 0.0f;
+GLboolean buttonPressed = GL_FALSE;
 
 void keyboard(GLFWwindow *window, int key, int scancode, int action, int mode)
 {
+	if (key >= 0 && key < 1024) {
+		if (action == GLFW_PRESS)
+			keyStatus[key] = GL_TRUE;
+		else if (action == GLFW_RELEASE)
+			keyStatus[key] = GL_FALSE;
+	}
+
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(window, GL_TRUE);
 	}
+}
+
+void mousebutton(GLFWwindow *window, int button, int action, int mods)
+{
+	if (button == GLFW_MOUSE_BUTTON_LEFT) {
+		if (action == GLFW_PRESS)
+			buttonPressed = GL_TRUE;
+		else if (action == GLFW_RELEASE)
+			buttonPressed = GL_FALSE;
+	}
+}
+
+void cursorpos(GLFWwindow *window, double xpos, double ypos)
+{
+	static GLboolean firstMove = GL_TRUE;
+	static double lastX = 0.0, lastY = 0.0;
+
+	if (buttonPressed == GL_FALSE) {
+		firstMove = GL_TRUE;
+		return;
+	}
+
+	if (firstMove) {// 首次鼠标移动
+		lastX = xpos;
+		lastY = ypos;
+		firstMove = GL_FALSE;
+	}
+
+	GLfloat xoffset = xpos - lastX;
+	GLfloat yoffset = ypos - lastY;
+
+	lastX = xpos;
+	lastY = ypos;
+
+	camera.handleMouseMove(xoffset, yoffset);
+}
+
+// 由相机辅助类处理鼠标滚轮控制
+void mousescoll(GLFWwindow *window, double xoffset, double yoffset)
+{
+	camera.handleMouseScroll(yoffset);
+}
+
+void movement()
+{
+	if (keyStatus[GLFW_KEY_W])
+		camera.handleKeyPress(Forward, deltaTime);
+	if (keyStatus[GLFW_KEY_S])
+		camera.handleKeyPress(Backward, deltaTime);
+	if (keyStatus[GLFW_KEY_A])
+		camera.handleKeyPress(Left, deltaTime);
+	if (keyStatus[GLFW_KEY_D])
+		camera.handleKeyPress(Right, deltaTime);
 }
 
 int main(int argc, char *argv[])
@@ -78,12 +92,17 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-	GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "View Transformation", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "FPS camera Euler", NULL, NULL);
 	if (!window)
 		return -1;
 
 	glfwMakeContextCurrent(window);
 	glfwSetKeyCallback(window, keyboard);
+	glfwSetMouseButtonCallback(window, mousebutton);
+	glfwSetCursorPosCallback(window, cursorpos);
+	glfwSetScrollCallback(window, mousescoll);
+	// 鼠标捕获 停留在程序内
+	//glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK)
@@ -126,7 +145,7 @@ int main(int argc, char *argv[])
 		-0.5f, 0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 0.0, 1.0f,    // H
 		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,	// D
 		-0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f,	// D
-		0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f,	// C
+		0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 1.0f,  1.0f, 0.0f,	// C
 		0.5f, 0.5f, -0.5f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f,	// G
 
 		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,	// A
@@ -135,6 +154,16 @@ int main(int argc, char *argv[])
 		0.5f, -0.5f, -0.5f, 1.0f, 1.0f, 0.0f, 1.0f, 1.0f,	// F
 		0.5f, -0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,	// B
 		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,	// A
+	};
+
+	glm::vec3 cubePostitions[] = {
+		glm::vec3(0.0f, 0.0f, 1.2f),
+		glm::vec3(0.0f, 0.0f, 0.0f),
+		glm::vec3(1.2f, 1.2f, 0.0f),
+		glm::vec3(-1.2f, 1.2f, 0.0f),
+		glm::vec3(-1.2f, -1.5f, 0.0f),
+		glm::vec3(1.2f, -1.5f, 0.0f),
+		glm::vec3(0.0f, 0.0f, -1.2f),
 	};
 
 	GLuint vaoId, vboId;
@@ -156,13 +185,16 @@ int main(int argc, char *argv[])
 	glBindVertexArray(0);
 
 	Shader shader("cube.vert", "cube.frag");
-
 	GLuint tId = TextureHelper::load2DTexture("../resources/textures/cat.png");
 
 	glEnable(GL_DEPTH_TEST);
 
 	while (!glfwWindowShouldClose(window)) {
-		glfwPollEvents();
+		GLfloat currentFrame = (GLfloat)glfwGetTime();
+		deltaTime = currentFrame - lastFrame;
+		lastFrame = currentFrame;
+		glfwPollEvents();// 处理例如鼠标 键盘等事件
+		movement();
 
 		glClearColor(0.18f, 0.04f, 0.14f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -170,44 +202,23 @@ int main(int argc, char *argv[])
 		glBindVertexArray(vaoId);
 		shader.use();
 
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), (GLfloat)(WINDOW_SIZE) / WINDOW_SIZE, 1.0f, 100.0f);
-#if MULTI_VIEW
-		glm::vec3 eye = getEyePosSphere();
-#else
-		glm::vec3 eye = getEyePosCircle();
-#endif
-		glm::mat4 view = glm::lookAt(eye, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::mat4 projection = glm::perspective(camera.mouseZoom, (GLfloat)(WINDOW_SIZE) / WINDOW_SIZE, 1.0f, 100.0f);
+		glm::mat4 view = camera.getViewMatrix();
 		glm::mat4 model;
 
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		
+
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, tId);
 		glUniform1i(glGetUniformLocation(shader.programId, "tex"), 0);
 
-#if MULTI_CUBE
-		// 指定立方体位移
-		glm::vec3 cubePostitions[] = {
-			glm::vec3(0.0f, 0.0f, 1.2f),
-			glm::vec3(0.0f, 0.0f, 0.0f),
-			glm::vec3(1.2f, 1.2f, 0.0f),
-			glm::vec3(-1.2f, 1.2f, 0.0f),
-			glm::vec3(-1.2f, -1.5f, 0.0f),
-			glm::vec3(1.2f, -1.5f, 0.0f),
-			glm::vec3(0.0f, 0.0f, -1.2f),
-		};
-		// 在主循环中绘制立方体
 		for (int i = 0; i < sizeof(cubePostitions) / sizeof(cubePostitions[0]); ++i) {
 			model = glm::mat4();
 			model = glm::translate(model, cubePostitions[i]);
 			glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"), 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, 0, 36);
 		}
-#else
-		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glDrawArrays(GL_TRIANGLES, 0, 36);
-#endif
 
 		glBindVertexArray(0);
 		glUseProgram(0);

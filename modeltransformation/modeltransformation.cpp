@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	Shader shader("transformation.vert", "transformation.frag");
+	Shader shader("rectangle.vert", "rectangle.frag");
 	Shader axiShader("axis.vert", "axis.frag");
 
     GLuint tId = TextureHelper::load2DTexture("../resources/textures/cat.png");

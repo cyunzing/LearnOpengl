@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-    GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "Gouraud", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "Material", NULL, NULL);
     if (!window)
         return -1;
 
@@ -206,11 +206,26 @@ int main(int argc, char *argv[])
         glBindVertexArray(vaoId);
         shader.use();
 
-        // 设置光源属性和物体颜色属性
-        glUniform3f(glGetUniformLocation(shader.programId, "lightPosition"), lampPosition.x, lampPosition.y, lampPosition.z);
-        glUniform3f(glGetUniformLocation(shader.programId, "lightColor"), 1.0f, 1.0f, 1.0f);
-        glUniform3f(glGetUniformLocation(shader.programId, "objectColor"), 1.0f, 0.5f, 0.31f);
-        glUniform3f(glGetUniformLocation(shader.programId, "viewPosition"), camera.position.x, camera.position.y, camera.position.z);
+		// 设置光源属性
+		glm::vec3 lightColor;
+		lightColor.x = sin(glfwGetTime() * 2.0f);
+		lightColor.y = sin(glfwGetTime() * 0.7f);
+		lightColor.z = sin(glfwGetTime() * 1.3f);
+		glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // 适当减小影响
+		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
+        glUniform3f(glGetUniformLocation(shader.programId, "light.ambient"), ambientColor.x, ambientColor.y, ambientColor.z);
+        glUniform3f(glGetUniformLocation(shader.programId, "light.diffuse"), diffuseColor.x, diffuseColor.y, diffuseColor.z);
+        glUniform3f(glGetUniformLocation(shader.programId, "light.specular"), 1.0f, 1.0f, 1.0f);
+        glUniform3f(glGetUniformLocation(shader.programId, "light.position"), lampPosition.x, lampPosition.y, lampPosition.z);
+
+		// 设置材料光照属性
+		glUniform3f(glGetUniformLocation(shader.programId, "material.ambient"), 1.0f, 0.5f, 0.31f);
+		glUniform3f(glGetUniformLocation(shader.programId, "material.ambient"), 1.0f, 0.5f, 0.31f);
+		glUniform3f(glGetUniformLocation(shader.programId, "material.ambient"), 0.5f, 0.5f, 0.5f);
+		glUniform1f(glGetUniformLocation(shader.programId, "material.ambient"), 32.0f);
+
+		// 设置观察者位置
+		glUniform3f(glGetUniformLocation(shader.programId, "viewPosition"), camera.position.x, camera.position.y, camera.position.z);
 
         // 设置变换矩阵
         glm::mat4 model;

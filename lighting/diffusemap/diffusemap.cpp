@@ -6,6 +6,7 @@
 #include "glm/gtc/type_ptr.hpp"
 
 #include "../../common/shader.h"
+#include "../../common/texture.h"
 #include "../../common/camera.h"
 
 #define WINDOW_SIZE 500
@@ -188,6 +189,13 @@ int main(int argc, char *argv[])
     Shader shader("cube.vert", "cube.frag");
     Shader lampShader("lamp.vert", "lamp.frag");
 
+    GLuint diffuseMap = TextureHelper::load2DTexture("../../resources/textures/container_diffuse.png");
+    GLuint specularMap = TextureHelper::load2DTexture("../../resources/textures/container_diffuse.png");
+    shader.use();
+
+    glUniform1i(glGetUniformLocation(shader.programId, "material.diffuseMap"), 0);
+    glUniform1i(glGetUniformLocation(shader.programId, "material.specularMap"), 1);
+
     glEnable(GL_DEPTH_TEST);
 
     while (!glfwWindowShouldClose(window)) {
@@ -206,30 +214,30 @@ int main(int argc, char *argv[])
         glBindVertexArray(vaoId);
         shader.use();
 
-		// 设置光源属性
-		glm::vec3 lightColor;
-		lightColor.x = sin(glfwGetTime() * 2.0f);
-		lightColor.y = sin(glfwGetTime() * 0.7f);
-		lightColor.z = sin(glfwGetTime() * 1.3f);
-		glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); // 适当减小影响
-		glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f);
-        glUniform3f(glGetUniformLocation(shader.programId, "light.ambient"), ambientColor.x, ambientColor.y, ambientColor.z);
-        glUniform3f(glGetUniformLocation(shader.programId, "light.diffuse"), diffuseColor.x, diffuseColor.y, diffuseColor.z);
+        // 设置光源属性
+		GLfloat radius = 2.0f;
+		lampPosition.x = radius * cos(glfwGetTime());
+		lampPosition.z = radius * sin(glfwGetTime());
+        glUniform3f(glGetUniformLocation(shader.programId, "light.ambient"), 0.2f, 0.2f, 0.2f);
+        glUniform3f(glGetUniformLocation(shader.programId, "light.diffuse"), 0.5f, 0.5f, 0.5f);
         glUniform3f(glGetUniformLocation(shader.programId, "light.specular"), 1.0f, 1.0f, 1.0f);
         glUniform3f(glGetUniformLocation(shader.programId, "light.position"), lampPosition.x, lampPosition.y, lampPosition.z);
 
-		// 设置材料光照属性
-		glUniform3f(glGetUniformLocation(shader.programId, "material.ambient"), 1.0f, 0.5f, 0.31f);
-		glUniform3f(glGetUniformLocation(shader.programId, "material.diffuse"), 1.0f, 0.5f, 0.31f);
-		glUniform3f(glGetUniformLocation(shader.programId, "material.specular"), 0.5f, 0.5f, 0.5f);
-		glUniform1f(glGetUniformLocation(shader.programId, "material.shininess"), 32.0f);
+        // 设置材料光照属性
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
 
-		// 设置观察者位置
-		glUniform3f(glGetUniformLocation(shader.programId, "viewPosition"), camera.position.x, camera.position.y, camera.position.z);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
+
+        glUniform1f(glGetUniformLocation(shader.programId, "material.shininess"), 32.0f);
+
+        // 设置观察者位置
+        glUniform3f(glGetUniformLocation(shader.programId, "viewPosition"), camera.position.x, camera.position.y, camera.position.z);
 
         // 设置变换矩阵
         glm::mat4 model;
-        model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        //model = glm::rotate(model, glm::radians(45.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"), 1, GL_FALSE, glm::value_ptr(view));
         glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"), 1, GL_FALSE, glm::value_ptr(model));

@@ -5,8 +5,8 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "../common/shader.h"
-#include "../common/camera.h"
+#include "../../common/shader.h"
+#include "../../common/camera.h"
 
 #define WINDOW_SIZE 500
 

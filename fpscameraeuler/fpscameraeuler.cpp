@@ -7,7 +7,7 @@
 
 #include "../common/shader.h"
 #include "../common/texture.h"
-#include "camera.h"
+#include "../common/camera.h"
 
 #define WINDOW_SIZE 500
 

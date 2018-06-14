@@ -69,7 +69,7 @@ private:
         for (size_t i = 0; i < shaderCount; ++i) {
             std::string shaderSource;
             if (!loadShaderSource(shaderFileVec[i].filePath, shaderSource)) {
-                std::cout << "Error::Shader could not load file:" << shaderFileVec[i].filePath << std::endl;
+                std::cerr << "Error::Shader could not load file:" << shaderFileVec[i].filePath << std::endl;
                 return;
             }
             sourceVec.push_back(shaderSource);
@@ -88,7 +88,7 @@ private:
                 glGetShaderiv(shaderId, GL_INFO_LOG_LENGTH, &maxLength);
                 std::vector<GLchar> errLog(maxLength);
                 glGetShaderInfoLog(shaderId, maxLength, &maxLength, &errLog[0]);
-                std::cout << "Error::Shader file [" << shaderFileVec[i].filePath << " ] compiled failed,"
+                std::cerr << "Error::Shader file [" << shaderFileVec[i].filePath << " ] compiled failed,"
                           << &errLog[0] << std::endl;
                 bSuccess = false;
             }
@@ -108,7 +108,7 @@ private:
                 glGetProgramiv(this->programId, GL_INFO_LOG_LENGTH, &maxLength);
                 std::vector<GLchar> errLog(maxLength);
                 glGetProgramInfoLog(this->programId, maxLength, &maxLength, &errLog[0]);
-                std::cout << "Error::shader link failed," << &errLog[0] << std::endl;
+                std::cerr << "Error::shader link failed," << &errLog[0] << std::endl;
             }
         }
         // 链接完成后detach 并释放shader object

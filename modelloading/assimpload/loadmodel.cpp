@@ -7,7 +7,8 @@
 #include "../../common/shader.h"
 #include "../../common/texture.h"
 #include "../../common/camera.h"
-#include "../../common/simpleobjloader.h"
+#include "../../common/mesh.h"
+#include "../../common/model.h"
 
 #define WINDOW_SIZE 500
 
@@ -92,7 +93,7 @@ int main(int argc, char *argv[])
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-	GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "Load obj", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "Load model", NULL, NULL);
 	if (!window) {
 		std::cout << "Error::GLFW could not create winddow!" << std::endl;
 		glfwTerminate();
@@ -118,22 +119,35 @@ int main(int argc, char *argv[])
 
 	glViewport(0, 0, WINDOW_SIZE, WINDOW_SIZE);
 
-	//Section1 从obj文件加载数据
-	std::vector<Vertex> vertices;
-	if (!ObjLoader::loadFromFile("../../resources/models/cube/cube.obj", vertices)) {
-		std::cerr << "Could not load obj model, exit now.";
+	//Section1 加载模型数据 为了方便更换模型 我们从文件读取模型文件路径
+	Model obj;
+#if 0
+	std::ifstream modelPath("model-path.txt");
+	if (!modelPath) {
+		std::cerr << "Error::could not read model path file." << std::endl;
+		glfwTerminate();
 		std::system("pause");
-		exit(-1);
+		return -1;
 	}
 
-	// Section2 准备纹理
-	GLuint tId = TextureHelper::loadDDS("../../resources/models/cube/cube.dds");
+	std::string modelFilePath;
+	std::getline(modelPath, modelFilePath);
+	if (modelFilePath.empty()) {
+		std::cerr << "Error::model path empty." << std::endl;
+		glfwTerminate();
+		std::system("pause");
+		return -1;
+	}
+#endif
+	if (!obj.loadModel("../../resources/models/nanosuit/nanosuit.obj")) {
+		std::cerr << "Could not load obj model." << std::endl;
+		glfwTerminate();
+		std::system("pause");
+		return -1;
+	}
 
-	// Section3 建立Mesh对象
-	Mesh mesh(vertices, tId, true);
-
-	// Section4 准备着色器程序
-	Shader shader("cube.vert", "cube.frag");
+	// Section2 准备着色器程序
+	Shader shader("model.vert", "model.frag");
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -152,15 +166,16 @@ int main(int argc, char *argv[])
 
 		glm::mat4 projection = glm::perspective(camera.mouseZoom, (GLfloat)(WINDOW_SIZE) / WINDOW_SIZE, 1.0f, 100.0f);
 		glm::mat4 view = camera.getViewMatrix();
-		
+
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
 		glm::mat4 model;
-		model = glm::scale(model, glm::vec3(0.8f, 0.8f, 0.8f));
+		model = glm::translate(model, glm::vec3(0.0f, -1.55f, -1.0f)); // 适当调整位置
+		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f)); // 适当缩小模型
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-		mesh.draw(shader);
+		obj.draw(shader);
 
 		glBindVertexArray(0);
 		glUseProgram(0);

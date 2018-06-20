@@ -51,7 +51,7 @@ void main()
 
 	// 计算衰减因子
 	float distance = length(light.position - fragPosition); // 在世界坐标系中计算距离
-	float attenuation = 1.0f / (light.constant+ light.linear * distance + light.quadratic * distance * distance);
+	float attenuation = 1.0f / (light.constant + light.linear * distance + light.quadratic * distance * distance);
 			
 	finalColor = vec4((ambient + diffuse + specular) * attenuation, 1.0);
 }

@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-	GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "Load model", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "Load model with assimp", NULL, NULL);
 	if (!window) {
 		std::cout << "Error::GLFW could not create winddow!" << std::endl;
 		glfwTerminate();

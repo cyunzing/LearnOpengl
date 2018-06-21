@@ -225,8 +225,8 @@ int main(int argc, char *argv[])
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	GLuint cubeTexId = TextureHelper::load2DTexture("./resources/textures/marble.jpg");
-	GLuint planeTexId = TextureHelper::load2DTexture("./resources/textures/metal.png");
+	GLuint cubeTexId = TextureHelper::load2DTexture("../../resources/textures/marble.jpg");
+	GLuint planeTexId = TextureHelper::load2DTexture("../../resources/textures/metal.png");
 
     Shader shader("stencil.vert", "stencil.frag");
 	Shader stencilShader("singlecolor.vert", "singlecolor.frag");

@@ -5,6 +5,8 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
+#include <map>
+
 #include "../../common/shader.h"
 #include "../../common/texture.h"
 #include "../../common/camera.h"
@@ -92,7 +94,7 @@ int main(int argc, char *argv[])
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
     glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-    GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "Blend transparent", NULL, NULL);
+    GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "Blend semi transparent", NULL, NULL);
     if (!window) {
         std::cout << "Error::GLFW could not create winddow!" << std::endl;
         glfwTerminate();
@@ -190,12 +192,12 @@ int main(int argc, char *argv[])
     };
 
     // 透明物体位置
-    std::vector<glm::vec3> vegetation;
-    vegetation.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
-    vegetation.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
-    vegetation.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
-    vegetation.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
-    vegetation.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
+    std::vector<glm::vec3> windowObjs;
+    windowObjs.push_back(glm::vec3(-1.5f, 0.0f, -0.48f));
+    windowObjs.push_back(glm::vec3(1.5f, 0.0f, 0.51f));
+    windowObjs.push_back(glm::vec3(0.0f, 0.0f, 0.7f));
+    windowObjs.push_back(glm::vec3(-0.3f, 0.0f, -2.3f));
+    windowObjs.push_back(glm::vec3(0.5f, 0.0f, -0.6f));
 
     GLuint cubeVaoId, cubeVboId;
     glGenVertexArrays(1, &cubeVaoId);
@@ -224,24 +226,24 @@ int main(int argc, char *argv[])
     glBindVertexArray(0);
 
     GLuint transparentVaoId, transparentVboId;
-	glGenVertexArrays(1, &transparentVaoId);
-	glBindVertexArray(transparentVaoId);
-	glGenBuffers(1, &transparentVboId);
-	glBindBuffer(GL_ARRAY_BUFFER, transparentVboId);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (GLvoid *)0);
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (GLvoid *)(3 * sizeof(GL_FLOAT)));
-	glEnableVertexAttribArray(1);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+    glGenVertexArrays(1, &transparentVaoId);
+    glBindVertexArray(transparentVaoId);
+    glGenBuffers(1, &transparentVboId);
+    glBindBuffer(GL_ARRAY_BUFFER, transparentVboId);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(transparentVertices), transparentVertices, GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (GLvoid *)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GL_FLOAT), (GLvoid *)(3 * sizeof(GL_FLOAT)));
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
 
     GLuint cubeTexId = TextureHelper::load2DTexture("../../resources/textures/marble.jpg");
     GLuint planeTexId = TextureHelper::load2DTexture("../../resources/textures/metal.png");
-	GLuint transparentTexId = TextureHelper::load2DTexture("../../resources/textures/grass.png", GL_RGBA, GL_RGBA, SOIL_LOAD_RGBA, true);
+    GLuint transparentTexId = TextureHelper::load2DTexture("../../resources/textures/window.png", GL_RGBA, GL_RGBA, SOIL_LOAD_RGBA, true);
 
     Shader shader("cube.vert", "cube.frag");
-	Shader transparentShader("transparent.vert", "transparent.frag");
+    Shader transparentShader("semitransparent.vert", "semitransparent.frag");
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
@@ -263,18 +265,18 @@ int main(int argc, char *argv[])
         glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
-		transparentShader.use();
-		glUniformMatrix4fv(glGetUniformLocation(transparentShader.programId, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-		glUniformMatrix4fv(glGetUniformLocation(transparentShader.programId, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        transparentShader.use();
+        glUniformMatrix4fv(glGetUniformLocation(transparentShader.programId, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(transparentShader.programId, "view"), 1, GL_FALSE, glm::value_ptr(view));
 
-		shader.use();
+        shader.use();
         glBindVertexArray(cubeVaoId);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, cubeTexId);
         glUniform1i(glGetUniformLocation(shader.programId, "tex"), 0);
 
         // 绘制第一个立方体
-		glm::mat4 model;
+        glm::mat4 model;
         model = glm::mat4();
         model = glm::translate(model, glm::vec3(-1.0f, 0.0f, -1.0f));
         glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"), 1, GL_FALSE, glm::value_ptr(model));
@@ -296,18 +298,43 @@ int main(int argc, char *argv[])
         glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"), 1, GL_FALSE, glm::value_ptr(model));
         glDrawArrays(GL_TRIANGLES, 0, 6);
 
-		// 绘制透明物体
-		transparentShader.use();
-		glBindVertexArray(transparentVaoId);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, transparentTexId);
-		for (std::vector<glm::vec3>::const_iterator it = vegetation.begin(); it != vegetation.end(); ++it) {
+        // 绘制透明物体
+		// 根据到观察者距离远近排序 使用map的键的默认排序功能(键为整数时从小到大)
+		std::map<GLfloat, glm::vec3> distanceMap;
+		for (std::vector<glm::vec3>::const_iterator it = windowObjs.begin(); it != windowObjs.end(); ++it) {
+			float distance = glm::distance(camera.position, *it);
+			distanceMap[distance] = *it;
+		}
+        transparentShader.use();
+        glBindVertexArray(transparentVaoId);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, transparentTexId);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+#if 1
+		// 根据transparency sort 结果进行绘制
+        for (std::map<GLfloat, glm::vec3>::reverse_iterator it = distanceMap.rbegin(); it != distanceMap.rend(); ++it) {
+            model = glm::mat4();
+            model = glm::translate(model, it->second);
+            glUniformMatrix4fv(glGetUniformLocation(transparentShader.programId, "model"), 1, GL_FALSE, glm::value_ptr(model));
+            glDrawArrays(GL_TRIANGLES, 0, 6);
+        }
+#else
+		//如果没有进行transparency sort 会有视觉bug 前面的窗户看不到后面的窗户
+		//绘制包含不透明和透明场景的顺序为：
+
+		//	1.首先绘制不透明物体
+		//	2.对透明物体进行排序
+		//	3.按照排序后的顺序，绘制透明物体。
+		for (std::vector<glm::vec3>::const_iterator it = windowObjs.begin(); windowObjs.end() != it; ++it) {
 			model = glm::mat4();
 			model = glm::translate(model, *it);
 			glUniformMatrix4fv(glGetUniformLocation(transparentShader.programId, "model"), 1, GL_FALSE, glm::value_ptr(model));
 			glDrawArrays(GL_TRIANGLES, 0, 6);
 		}
-
+#endif
+		glDisable(GL_BLEND);
 
         glBindVertexArray(0);
         glUseProgram(0);
@@ -317,10 +344,10 @@ int main(int argc, char *argv[])
 
     glDeleteVertexArrays(1, &cubeVaoId);
     glDeleteVertexArrays(1, &planeVaoId);
-	glDeleteVertexArrays(1, &transparentVaoId);
+    glDeleteVertexArrays(1, &transparentVaoId);
     glDeleteBuffers(1, &cubeVboId);
     glDeleteBuffers(1, &planeVboId);
-	glDeleteBuffers(1, &transparentVaoId);
+    glDeleteBuffers(1, &transparentVaoId);
 
     glfwTerminate();
 

@@ -8,37 +8,39 @@
 class TextureHelper
 {
 public:
-    /*
-    /* 成功加载2D纹理则返回纹理对象Id 否则返回0
-    */
-    static GLuint load2DTexture(const char* filename, GLint internalFormat = GL_RGB, GLenum picFormat = GL_RGB, int loadChannels = SOIL_LOAD_RGB)
-    {
-        // Step1 创建并绑定纹理对象
-        GLuint textureId = 0;
+	/*
+	/* 成功加载2D纹理则返回纹理对象Id 否则返回0
+	*/
+	static GLuint load2DTexture(const char* filename, GLint internalFormat = GL_RGB, GLenum picFormat = GL_RGB, int loadChannels = SOIL_LOAD_RGB, GLboolean alpha = false)
+	{
+		// Step1 创建并绑定纹理对象
+		GLuint textureId = 0;
 
-        glGenTextures(1, &textureId);
-        glBindTexture(GL_TEXTURE_2D, textureId);
-        // Step2 设定wrap参数
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        // Step3 设定filter参数
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // 为MipMap设定filter方法
-        // Step4 加载纹理
-        int w, h;
-        GLubyte *data = SOIL_load_image(filename, &w, &h, 0, loadChannels);
-        if (data == NULL) {
-            std::cerr << "Error::Texture could not load texture file:" << filename << std::endl;
-            return 0;
-        }
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, picFormat, GL_UNSIGNED_BYTE, data);
-        glGenerateMipmap(GL_TEXTURE_2D);
-        // Step5 释放纹理图片资源
-        SOIL_free_image_data(data);
-        glBindTexture(GL_TEXTURE_2D, 0);
+		glGenTextures(1, &textureId);
+		glBindTexture(GL_TEXTURE_2D, textureId);
+		// Step2 设定wrap参数
+		// 注意这里使用GL_CLAMP_TO_EDGE 避免边缘部分半透明的视觉bug
+		// 边缘部分半透明 是因为使用下次重复的纹理做插值导致的
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, alpha ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, alpha ? GL_CLAMP_TO_EDGE : GL_REPEAT);
+		// Step3 设定filter参数
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR); // 为MipMap设定filter方法
+		// Step4 加载纹理
+		int w, h;
+		GLubyte *data = SOIL_load_image(filename, &w, &h, 0, loadChannels);
+		if (data == NULL) {
+			std::cerr << "Error::Texture could not load texture file:" << filename << std::endl;
+			return 0;
+		}
+		glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, w, h, 0, picFormat, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		// Step5 释放纹理图片资源
+		SOIL_free_image_data(data);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
-        return textureId;
-    }
+		return textureId;
+	}
 
 #define FOURCC_DXT1 0x31545844 // Equivalent to "DXT1" in ASCII
 #define FOURCC_DXT3 0x33545844 // Equivalent to "DXT3" in ASCII

@@ -131,6 +131,20 @@ public:
 		delete[] buffer;
 		return textureId;
 	}
+
+	/*
+	* 创建framebuffer-attachable texture
+	*/
+	static GLuint makeAttachmentTexture(GLint level = 0, GLint internalFormat = GL_DEPTH24_STENCIL8, GLsizei width = 800, GLsizei height = 600, GLenum format = GL_DEPTH_STENCIL, GLenum type = GL_UNSIGNED_INT_24_8)
+	{
+		GLuint textureId;
+		glGenTextures(1, &textureId);
+		glBindTexture(GL_TEXTURE_2D, textureId);
+		glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, height, 0, format, type, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		return textureId;
+	}
 };
 
 #endif // TEXTURE_H

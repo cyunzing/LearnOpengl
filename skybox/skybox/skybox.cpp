@@ -229,7 +229,7 @@ int main(int argc, char *argv[])
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	GLuint cubeTexId = TextureHelper::load2DTexture("./resources/textures/container.jpg");
+	GLuint cubeTexId = TextureHelper::load2DTexture("../../resources/textures/container.jpg");
 
 	std::vector<std::string> faces;
 #if 1
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
 		glDepthMask(GL_FALSE);// 禁止写入深度缓冲区
 		skyboxShader.use();
 
-		glm::mat4 projection = glm::perspective(camera.mouseZoom, (GLfloat)WINDOW_SIZE / WINDOW_SIZE, 1.0f, 100.0f);
+		glm::mat4 projection = glm::perspective(camera.mouseZoom, (GLfloat)WINDOW_SIZE / WINDOW_SIZE, 0.1f, 100.0f);
 #if 1
 		glm::mat4 view = glm::mat4(glm::mat3(camera.getViewMatrix()));// 视变换矩阵 移除translate部分
 		glm::mat4 model;

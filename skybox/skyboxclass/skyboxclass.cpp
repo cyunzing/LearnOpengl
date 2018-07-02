@@ -5,10 +5,8 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "glm/gtc/type_ptr.hpp"
 
-#include "../../common/texture.h"
-#include "../../common/shader.h"
 #include "../../common/camera.h"
-
+#include "../../common/skybox.h"
 
 #define WINDOW_SIZE 500
 
@@ -154,56 +152,6 @@ int main(int argc, char *argv[])
         0.5f, -0.5f, 0.5f,1.0f, 0.0f,	// B
         -0.5f, -0.5f, 0.5f,0.0f, 0.0f,	// A
     };
-    // 指定包围盒的顶点属性 位置
-    GLfloat skyboxVertices[] = {
-        // 背面
-        -1.0f, 1.0f, -1.0f,		// A
-        -1.0f, -1.0f, -1.0f,	// B
-        1.0f, -1.0f, -1.0f,		// C
-        1.0f, -1.0f, -1.0f,		// C
-        1.0f, 1.0f, -1.0f,		// D
-        -1.0f, 1.0f, -1.0f,		// A
-
-        // 左侧面
-        -1.0f, -1.0f, 1.0f,		// E
-        -1.0f, -1.0f, -1.0f,	// B
-        -1.0f, 1.0f, -1.0f,		// A
-        -1.0f, 1.0f, -1.0f,		// A
-        -1.0f, 1.0f, 1.0f,		// F
-        -1.0f, -1.0f, 1.0f,		// E
-
-        // 右侧面
-        1.0f, -1.0f, -1.0f,		// C
-        1.0f, -1.0f, 1.0f,		// G
-        1.0f, 1.0f, 1.0f,		// H
-        1.0f, 1.0f, 1.0f,		// H
-        1.0f, 1.0f, -1.0f,		// D
-        1.0f, -1.0f, -1.0f,		// C
-
-        // 正面
-        -1.0f, -1.0f, 1.0f,  // E
-        -1.0f, 1.0f, 1.0f,  // F
-        1.0f, 1.0f, 1.0f,  // H
-        1.0f, 1.0f, 1.0f,  // H
-        1.0f, -1.0f, 1.0f,  // G
-        -1.0f, -1.0f, 1.0f,  // E
-
-        // 顶面
-        -1.0f, 1.0f, -1.0f,  // A
-        1.0f, 1.0f, -1.0f,  // D
-        1.0f, 1.0f, 1.0f,  // H
-        1.0f, 1.0f, 1.0f,  // H
-        -1.0f, 1.0f, 1.0f,  // F
-        -1.0f, 1.0f, -1.0f,  // A
-
-        // 底面
-        -1.0f, -1.0f, -1.0f,  // B
-        -1.0f, -1.0f, 1.0f,   // E
-        1.0f, -1.0f, 1.0f,    // G
-        1.0f, -1.0f, 1.0f,    // G
-        1.0f, -1.0f, -1.0f,   // C
-        -1.0f, -1.0f, -1.0f,  // B
-    };
 
     GLuint cubeVaoId, cubeVboId;
     glGenVertexArrays(1, &cubeVaoId);
@@ -218,18 +166,10 @@ int main(int argc, char *argv[])
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    GLuint skyboxVaoId, skyboxVboId;
-    glGenVertexArrays(1, &skyboxVaoId);
-    glBindVertexArray(skyboxVaoId);
-    glGenBuffers(1, &skyboxVboId);
-    glBindBuffer(GL_ARRAY_BUFFER, skyboxVboId);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid *)0);
-    glEnableVertexAttribArray(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
     GLuint cubeTexId = TextureHelper::load2DTexture("../../resources/textures/container.jpg");
+
+	Shader shader("scene.vert", "scene.frag");
+	Shader skyboxShader("skybox.vert", "skybox.frag");
 
     std::vector<std::string> faces;
 #if 0
@@ -247,14 +187,12 @@ int main(int argc, char *argv[])
     faces.push_back("../../resources/skyboxes/urbansp/urbansp_bk.tga");
     faces.push_back("../../resources/skyboxes/urbansp/urbansp_ft.tga");
 #endif
-    GLuint skyboxTexId = TextureHelper::loadCubeMapTexture(faces);
-
-    Shader shader("scene.vert", "scene.frag");
-    Shader skyboxShader("skybox.vert", "skybox.frag");
+	SkyBox skybox;
+	skybox.init(faces);
 
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
-	glDepthFunc(GL_LESS);
+    glDepthFunc(GL_LESS);
 
     while (!glfwWindowShouldClose(window)) {
         GLfloat currentFrame = (GLfloat)glfwGetTime();
@@ -266,45 +204,38 @@ int main(int argc, char *argv[])
         glClearColor(0.18, 0.04, 0.14, 1.0);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		// 先绘制场景
-		shader.use();
-		glm::mat4 projection = glm::perspective(camera.mouseZoom, (GLfloat)WINDOW_SIZE / WINDOW_SIZE, 0.1f, 100.0f);
-		glm::mat4 view = camera.getViewMatrix();
-		glm::mat4 model = glm::mat4();
-		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"), 1, GL_FALSE, glm::value_ptr(model));
+        // 先绘制场景
+        shader.use();
+        glm::mat4 projection = glm::perspective(camera.mouseZoom, (GLfloat)WINDOW_SIZE / WINDOW_SIZE, 0.1f, 100.0f);
+        glm::mat4 view = camera.getViewMatrix();
+        glm::mat4 model = glm::mat4();
+        glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+        glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"), 1, GL_FALSE, glm::value_ptr(view));
+        glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-		glBindVertexArray(cubeVaoId);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, cubeTexId);
-		glUniform1i(glGetUniformLocation(shader.programId, "tex"), 0);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+        glBindVertexArray(cubeVaoId);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, cubeTexId);
+        glUniform1i(glGetUniformLocation(shader.programId, "tex"), 0);
+        glDrawArrays(GL_TRIANGLES, 0, 36);
 
         // 然后绘制包围盒
-        glDepthFunc(GL_LEQUAL);// 深度测试条件 小于等于
-        skyboxShader.use();
+		skyboxShader.use();
         view = glm::mat4(glm::mat3(camera.getViewMatrix()));// 视变换矩阵 移除translate部分
         glUniformMatrix4fv(glGetUniformLocation(skyboxShader.programId, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
         glUniformMatrix4fv(glGetUniformLocation(skyboxShader.programId, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.textureId());
+		glUniform1i(glGetUniformLocation(skyboxShader.programId, "skybox"), 0);
+		skybox.draw(skyboxShader);
 
-        glBindVertexArray(skyboxVaoId);
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexId);
-        glUniform1i(glGetUniformLocation(skyboxShader.programId, "skybox"), 0);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
-
-		glDepthFunc(GL_LESS);
-		
         glBindVertexArray(0);
         glUseProgram(0);
 
         glfwSwapBuffers(window);
     }
     glDeleteVertexArrays(1, &cubeVaoId);
-    glDeleteVertexArrays(1, &skyboxVaoId);
     glDeleteBuffers(1, &cubeVboId);
-    glDeleteBuffers(1, &skyboxVaoId);
 
     glfwTerminate();
     return 0;

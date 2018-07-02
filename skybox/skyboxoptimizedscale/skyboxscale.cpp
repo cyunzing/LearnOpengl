@@ -296,6 +296,8 @@ int main(int argc, char *argv[])
         glUniform1i(glGetUniformLocation(skyboxShader.programId, "skybox"), 0);
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
+		glDepthFunc(GL_LESS);
+		
         glBindVertexArray(0);
         glUseProgram(0);
 

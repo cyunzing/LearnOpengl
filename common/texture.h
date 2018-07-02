@@ -1,6 +1,9 @@
 #ifndef TEXTURE_H
 #define TEXTURE_H
 
+#include <vector>
+#include <string>
+#include <fstream>
 #include <iostream>
 #include "GLFW/glfw3.h"
 #include "SOIL/SOIL.h"
@@ -39,6 +42,32 @@ public:
 		SOIL_free_image_data(data);
 		glBindTexture(GL_TEXTURE_2D, 0);
 
+		return textureId;
+	}
+
+	static GLuint loadCubeMapTexture(const std::vector<std::string> &picFilePathVec, GLint internalFormat = GL_RGB, GLenum format = GL_RGB, GLenum type = GL_UNSIGNED_BYTE, int loadChannels = SOIL_LOAD_RGB)
+	{
+		GLuint textureId;
+		glGenTextures(1, &textureId);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, textureId);
+		GLubyte *data = NULL;
+		int w, h;
+		for (size_t i = 0; i < picFilePathVec.size(); ++i) {
+			int channels = 0;
+			data = SOIL_load_image(picFilePathVec[i].c_str(), &w, &h, &channels, loadChannels);
+			if (data == NULL) {
+				std::cerr << "Error::loadCubeMapTexture could not load texture file:" << picFilePathVec[i] << std::endl;
+				return 0;
+			}
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, internalFormat, w, h, 0, format, type, data);
+			SOIL_free_image_data(data);
+		}
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
 		return textureId;
 	}
 

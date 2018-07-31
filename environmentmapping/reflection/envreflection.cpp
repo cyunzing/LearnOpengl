@@ -67,7 +67,7 @@ void cursorpos(GLFWwindow *window, double xpos, double ypos)
 }
 
 // 由相机辅助类处理鼠标滚轮控制
-void mousescoll(GLFWwindow *window, double xoffset, double yoffset)
+void mousescroll(GLFWwindow *window, double xoffset, double yoffset)
 {
 	camera.handleMouseScroll(yoffset);
 }
@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
 	glfwSetKeyCallback(window, keyboard);
 	glfwSetMouseButtonCallback(window, mousebutton);
 	glfwSetCursorPosCallback(window, cursorpos);
-	glfwSetScrollCallback(window, mousescoll);
+	glfwSetScrollCallback(window, mousescroll);
 
 	glewExperimental = GL_TRUE;
 	if (glewInit() != GLEW_OK)

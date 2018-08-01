@@ -40,7 +40,7 @@ public:
 			return false;
 		}
 
-		const aiScene *scene = importer.ReadFile(filePath, aiProcess_Triangulate | aiProcess_FlipUVs);
+		const aiScene *scene = importer.ReadFile(filePath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenSmoothNormals);
 		if (!scene || scene->mFlags == AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
 			std::cerr << "Error:Model::loadModel, description: " << importer.GetErrorString() << std::endl;
 			return false;
@@ -136,6 +136,11 @@ private:
 			std::vector<Texture> specularTexture;
 			processMaterial(material, scene, aiTextureType_SPECULAR, specularTexture);
 			textures.insert(textures.end(), specularTexture.begin(), specularTexture.end());
+			// 获取Reflection 注意: AssImp对Reflection支持不好 所以这里采用ambient_map
+			// 除了这里的代码 还需要修改对应的obj文件
+			std::vector<Texture> reflectionTexture;
+			this->processMaterial(material, scene, aiTextureType_AMBIENT, reflectionTexture);
+			textures.insert(textures.end(), reflectionTexture.begin(), reflectionTexture.end());
 		}
 
 		obj.setData(vertices, indices, textures);

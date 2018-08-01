@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-	GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "sphere env reflection map", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "model env reflection map", NULL, NULL);
 	if (window == NULL)
 		return -1;
 
@@ -113,7 +113,7 @@ int main(int argc, char *argv[])
 	
 
 	Model obj;
-	if (!obj.loadModel("resources/models/sphere/sphere.obj"))
+	if (!obj.loadModel("resources/models/nanosuit/nanosuit.obj"))
 		return -1;
 
 	std::vector<std::string> faces;
@@ -148,13 +148,17 @@ int main(int argc, char *argv[])
 		glm::mat4 projection = glm::perspective(camera.mouseZoom, (GLfloat)(WINDOW_SIZE) / WINDOW_SIZE, 0.1f, 100.0f);
 		glm::mat4 view = camera.getViewMatrix();
 		glm::mat4 model;
+		model = glm::translate(model, glm::vec3(0.0f, -1.55f, 0.0f));
+		model = glm::scale(model, glm::vec3(0.2f, 0.2f, 0.2f));
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(shader.programId, "model"), 1, GL_FALSE, glm::value_ptr(model));
 
-		glActiveTexture(GL_TEXTURE0);
+		// 注意已经有了diffuse specular reflection map 
+		// 这里应该设置为第四个纹理单元
+		glActiveTexture(GL_TEXTURE3);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.textureId());
-		glUniform1i(glGetUniformLocation(shader.programId, "tex"), 0);
+		glUniform1i(glGetUniformLocation(shader.programId, "tex"), 3);
 		glUniform3f(glGetUniformLocation(shader.programId, "viewPosition"), camera.position.x, camera.position.y, camera.position.z);
 		obj.draw(shader);
 

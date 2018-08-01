@@ -5,8 +5,7 @@ uniform mat4 view;
 uniform mat4 model;
 
 layout(location = 0) in vec3 vert;
-layout(location = 1) in vec2 vertTextCoord;
-layout(location = 2) in vec3 vertNormal;
+layout(location = 1) in vec3 vertNormal;
 
 out vec3 fragVert;
 out vec3 fragNormal;

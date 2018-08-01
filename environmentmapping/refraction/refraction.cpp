@@ -8,7 +8,7 @@
 #include "../../common/texture.h"
 #include "../../common/shader.h"
 #include "../../common/camera.h"
-
+#include "../../common/skybox.h"
 
 #define WINDOW_SIZE 500
 
@@ -51,7 +51,7 @@ void cursorpos(GLFWwindow *window, double xpos, double ypos)
 		return;
 	}
 
-	if (firstMove) {//  ◊¥Œ Û±Í“∆∂Ø
+	if (firstMove) {// È¶ñÊ¨°Èº†Ê†áÁßªÂä®
 		lastX = xpos;
 		lastY = ypos;
 		firstMove = GL_FALSE;
@@ -66,7 +66,7 @@ void cursorpos(GLFWwindow *window, double xpos, double ypos)
 	camera.handleMouseMove(xoffset, yoffset);
 }
 
-// ”…œ‡ª˙∏®÷˙¿‡¥¶¿Ì Û±Íπˆ¬÷øÿ÷∆
+// Áî±Áõ∏Êú∫ËæÖÂä©Á±ªÂ§ÑÁêÜÈº†Ê†áÊªöËΩÆÊéßÂà∂
 void mousescroll(GLFWwindow *window, double xoffset, double yoffset)
 {
 	camera.handleMouseScroll(yoffset);
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_RESIZABLE, GL_FALSE);
 
-	GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "environment mapping", NULL, NULL);
+	GLFWwindow *window = glfwCreateWindow(WINDOW_SIZE, WINDOW_SIZE, "refraction", NULL, NULL);
 	if (window == NULL)
 		return -1;
 
@@ -108,9 +108,9 @@ int main(int argc, char *argv[])
 
 	glViewport(0, 0, WINDOW_SIZE, WINDOW_SIZE);
 
-		// ÷∏∂®¡¢∑ΩÃÂ∂•µ„ Ù–‘ ˝æ› ∂•µ„Œª÷√ ∑®œÚ¡ø
+		// ÊåáÂÆöÁ´ãÊñπ‰ΩìÈ°∂ÁÇπÂ±ûÊÄßÊï∞ÊçÆ È°∂ÁÇπ‰ΩçÁΩÆ Ê≥ïÂêëÈáè
 	GLfloat cubeVertices[] = {
-		// ±≥√Ê ADC CBA
+		// ËÉåÈù¢ ADC CBA
 		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 		-0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 		0.5f, 0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
@@ -118,7 +118,7 @@ int main(int argc, char *argv[])
 		0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f,
 
-		// ’˝√ÊEFG GHE
+		// Ê≠£Èù¢EFG GHE
 		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
 		0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
 		0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
 		-0.5f, 0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
 		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f,
 
-		// ◊Û≤‡√Ê HDA AEH
+		// Â∑¶‰æßÈù¢ HDA AEH
 		-0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
 		-0.5f, 0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
 		-0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f,
@@ -134,15 +134,15 @@ int main(int argc, char *argv[])
 		-0.5f, -0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
 		-0.5f, 0.5f, 0.5f, -1.0f, 0.0f, 0.0f,
 
-		// ”“≤‡√Ê GFB BCG
+		// Âè≥‰æßÈù¢ GFB BCG
 		0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
 		0.5f, -0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
 		0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
 		0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
 		0.5f, 0.5f, -0.5f, 1.0f, 0.0f, 0.0f,
 		0.5f, 0.5f, 0.5f, 1.0f, 0.0f, 0.0f,
-		
-		// µ◊√Ê ABF FEA
+
+		// Â∫ïÈù¢ ABF FEA
 		-0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
 		0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
 		0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
@@ -150,63 +150,13 @@ int main(int argc, char *argv[])
 		-0.5f, -0.5f, 0.5f, 0.0f, -1.0f, 0.0f,
 		-0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f,
 
-		// ∂•√Ê DHG GCD
-		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 
+		// È°∂Èù¢ DHG GCD
+		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
 		-0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
 		0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
 		0.5f, 0.5f, 0.5f, 0.0f, 1.0f, 0.0f,
 		0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f,
 		-0.5f, 0.5f, -0.5f, 0.0f, 1.0f, 0.0f
-	};
-	// ÷∏∂®∞¸Œß∫–µƒ∂•µ„ Ù–‘ Œª÷√
-	GLfloat skyboxVertices[] = {
-		// ±≥√Ê
-		-1.0f, 1.0f, -1.0f,		// A
-		-1.0f, -1.0f, -1.0f,	// B
-		1.0f, -1.0f, -1.0f,		// C
-		1.0f, -1.0f, -1.0f,		// C
-		1.0f, 1.0f, -1.0f,		// D
-		-1.0f, 1.0f, -1.0f,		// A
-
-		// ◊Û≤‡√Ê
-		-1.0f, -1.0f, 1.0f,		// E
-		-1.0f, -1.0f, -1.0f,	// B
-		-1.0f, 1.0f, -1.0f,		// A
-		-1.0f, 1.0f, -1.0f,		// A
-		-1.0f, 1.0f, 1.0f,		// F
-		-1.0f, -1.0f, 1.0f,		// E
-
-		// ”“≤‡√Ê
-		1.0f, -1.0f, -1.0f,		// C
-		1.0f, -1.0f, 1.0f,		// G
-		1.0f, 1.0f, 1.0f,		// H
-		1.0f, 1.0f, 1.0f,		// H
-		1.0f, 1.0f, -1.0f,		// D
-		1.0f, -1.0f, -1.0f,		// C
-
-		// ’˝√Ê
-		-1.0f, -1.0f, 1.0f,  // E
-		-1.0f, 1.0f, 1.0f,  // F
-		1.0f, 1.0f, 1.0f,  // H
-		1.0f, 1.0f, 1.0f,  // H
-		1.0f, -1.0f, 1.0f,  // G
-		-1.0f, -1.0f, 1.0f,  // E
-
-		// ∂•√Ê
-		-1.0f, 1.0f, -1.0f,  // A
-		1.0f, 1.0f, -1.0f,  // D
-		1.0f, 1.0f, 1.0f,  // H
-		1.0f, 1.0f, 1.0f,  // H
-		-1.0f, 1.0f, 1.0f,  // F
-		-1.0f, 1.0f, -1.0f,  // A
-
-		// µ◊√Ê
-		-1.0f, -1.0f, -1.0f,  // B
-		-1.0f, -1.0f, 1.0f,   // E
-		1.0f, -1.0f, 1.0f,    // G
-		1.0f, -1.0f, 1.0f,    // G
-		1.0f, -1.0f, -1.0f,   // C
-		-1.0f, -1.0f, -1.0f,  // B
 	};
 
 	GLuint cubeVaoId, cubeVboId;
@@ -222,25 +172,15 @@ int main(int argc, char *argv[])
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	GLuint skyboxVaoId, skyboxVboId;
-	glGenVertexArrays(1, &skyboxVaoId);
-	glBindVertexArray(skyboxVaoId);
-	glGenBuffers(1, &skyboxVboId);
-	glBindBuffer(GL_ARRAY_BUFFER, skyboxVboId);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (GLvoid *)0);
-	glEnableVertexAttribArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
 	std::vector<std::string> faces;
-	faces.push_back("../../resources/skyboxes/sky/sky_rt.jpg");
-	faces.push_back("../../resources/skyboxes/sky/sky_lf.jpg");
-	faces.push_back("../../resources/skyboxes/sky/sky_up.jpg");
-	faces.push_back("../../resources/skyboxes/sky/sky_dn.jpg");
-	faces.push_back("../../resources/skyboxes/sky/sky_bk.jpg");
-	faces.push_back("../../resources/skyboxes/sky/sky_ft.jpg");
-	GLuint skyboxTexId = TextureHelper::loadCubeMapTexture(faces);
+	faces.push_back("resources/skyboxes/sky/sky_rt.jpg");
+	faces.push_back("resources/skyboxes/sky/sky_lf.jpg");
+	faces.push_back("resources/skyboxes/sky/sky_up.jpg");
+	faces.push_back("resources/skyboxes/sky/sky_dn.jpg");
+	faces.push_back("resources/skyboxes/sky/sky_bk.jpg");
+	faces.push_back("resources/skyboxes/sky/sky_ft.jpg");
+	SkyBox skybox;
+	skybox.init(faces);
 
 	Shader shader("scene.vert", "scene.frag");
 	Shader skyboxShader("skybox.vert", "skybox.frag");
@@ -253,8 +193,8 @@ int main(int argc, char *argv[])
 		GLfloat currentFrame = (GLfloat)glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
-		glfwPollEvents(); // ¥¶¿Ì¿˝»Á Û±Í º¸≈Ãµ» ¬º˛
-		movement(); // ∏˘æ›”√ªß≤Ÿ◊˜«Èøˆ ∏¸–¬œ‡ª˙ Ù–‘
+		glfwPollEvents(); // Â§ÑÁêÜ‰æãÂ¶ÇÈº†Ê†á ÈîÆÁõòÁ≠â‰∫ã‰ª∂
+		movement(); // Ê†πÊçÆÁî®Êà∑Êìç‰ΩúÊÉÖÂÜµ Êõ¥Êñ∞Áõ∏Êú∫Â±ûÊÄß
 
 		glClearColor(0.18, 0.04, 0.14, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -269,24 +209,20 @@ int main(int argc, char *argv[])
 
 		glBindVertexArray(cubeVaoId);
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexId);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.textureId());
 		glUniform1i(glGetUniformLocation(shader.programId, "tex"), 0);
 		glUniform3f(glGetUniformLocation(shader.programId, "viewPosition"), camera.position.x, camera.position.y, camera.position.z);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-
-		glDepthFunc(GL_LEQUAL); // …Ó∂»≤‚ ‘Ãıº˛ –°”⁄µ»”⁄
 		skyboxShader.use();
 		view = glm::mat4(glm::mat3(view));
 		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.programId, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 		glUniformMatrix4fv(glGetUniformLocation(skyboxShader.programId, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		
-		glBindVertexArray(skyboxVaoId);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTexId);
-		glUniform1i(glGetUniformLocation(skyboxShader.programId, "skybox"), 0);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
 
-		glDepthFunc(GL_LESS);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, skybox.textureId());
+		glUniform1i(glGetUniformLocation(skyboxShader.programId, "skybox"), 0);
+		skybox.draw(skyboxShader);
 
 		glBindVertexArray(0);
 		glUseProgram(0);
@@ -296,8 +232,6 @@ int main(int argc, char *argv[])
 
 	glDeleteVertexArrays(1, &cubeVaoId);
 	glDeleteBuffers(1, &cubeVboId);
-	glDeleteVertexArrays(1, &skyboxVaoId);
-	glDeleteBuffers(1, &skyboxVboId);
 
 	glfwTerminate();
 
